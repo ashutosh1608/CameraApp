@@ -14,6 +14,7 @@ import com.example.trial.Constants.FILENAME_FORMAT
 import com.example.trial.Constants.REQUEST_CODE_CAMERA_PERMISSION
 import com.example.trial.Constants.TAG
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.fragment_cam.*
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 import java.io.File
@@ -91,7 +92,7 @@ class CameraFragment : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
             val preview = Preview.Builder()
                 .build()
                 .also {
-                    it.setSurfaceProvider(viewFinder.surfaceProvider)
+                    it.setSurfaceProvider(camView.surfaceProvider)
                 }
 
             imageCapture = ImageCapture.Builder()
