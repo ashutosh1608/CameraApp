@@ -39,7 +39,7 @@ typealias LumaListener = (luma: Double) -> Unit
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.
  */
-class CameraFragment : Fragment(), EasyPermissions.PermissionCallbacks {
+class CamFragment : Fragment(), EasyPermissions.PermissionCallbacks {
 
     private var _binding: FragmentCamBinding? = null
     private var imageCapture: ImageCapture? = null
