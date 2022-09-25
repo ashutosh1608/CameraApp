@@ -1,18 +1,28 @@
 package com.example.trial
 
+import android.os.Bundle
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.navigation.fragment.findNavController
+import com.example.trial.databinding.FragmentSecondBinding
+import com.example.trial.databinding.FragmentCamBinding
 import android.Manifest
+import android.content.Context
 import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.camera.core.*
+import androidx.camera.core.R
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import com.example.trial.Constants.FILENAME_FORMAT
 import com.example.trial.Constants.REQUEST_CODE_CAMERA_PERMISSION
 import com.example.trial.Constants.TAG
+import com.example.trial.databinding.FragmentFirstBinding
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_cam.*
 import pub.devrel.easypermissions.AppSettingsDialog
@@ -26,25 +36,36 @@ import java.util.concurrent.Executors
 
 typealias LumaListener = (luma: Double) -> Unit
 
-class CameraFragment : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
+/**
+ * A simple [Fragment] subclass as the second destination in the navigation.
+ */
+class CameraFragment : Fragment(), EasyPermissions.PermissionCallbacks {
 
+    private var _binding: FragmentCamBinding? = null
     private var imageCapture: ImageCapture? = null
     private lateinit var outputDirectory: File
     private lateinit var cameraExecutor: ExecutorService
+    // This property is only valid between onCreateView and
+    // onDestroyView.
+    private val binding get() = _binding!!
+    var thisContext: Context? = null
 
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        thisContext = container?.getContext()
+        _binding = FragmentCamBinding.inflate(inflater, container, false)
+        return binding.root
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         requestPermission()
-
-        // Set up the listener for take photo button
-        camera_capture_button.setOnClickListener { takePhoto() }
-
+        binding.cameraCaptureButton.setOnClickListener { takePhoto() }
         outputDirectory = getOutputDirectory()
-
         cameraExecutor = Executors.newSingleThreadExecutor()
-
     }
 
     private fun takePhoto() {
@@ -64,9 +85,11 @@ class CameraFragment : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
 
         // Set up image capture listener, which is triggered after photo has
         // been taken
+
+
         imageCapture.takePicture(
             outputOptions,
-            ContextCompat.getMainExecutor(this),
+            ContextCompat.getMainExecutor(requireContext()),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
                     Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
@@ -75,14 +98,22 @@ class CameraFragment : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                     val savedUri = Uri.fromFile(photoFile)
                     val msg = "Photo capture succeeded: $savedUri"
-                    Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(thisContext, msg, Toast.LENGTH_SHORT).show()
                     Log.d(TAG, msg)
                 }
             })
     }
 
+    private fun getOutputDirectory(): File {
+        val mediaDir = activity?.externalMediaDirs?.firstOrNull()?.let {
+            File(it, "Trial").apply { mkdirs() }
+        }
+        return if (mediaDir != null && mediaDir.exists())
+            mediaDir else activity?.filesDir!!
+    }
+
     private fun startCamera() {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
 
         cameraProviderFuture.addListener({
             // Used to bind the lifecycle of cameras to the lifecycle owner
@@ -122,26 +153,11 @@ class CameraFragment : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
                 Log.e(TAG, "Use case binding failed", exc)
             }
 
-        }, ContextCompat.getMainExecutor(this))
-    }
-
-
-    private fun getOutputDirectory(): File {
-        val mediaDir = externalMediaDirs.firstOrNull()?.let {
-            File(it, resources.getString(R.string.app_name)).apply { mkdirs() }
-        }
-        return if (mediaDir != null && mediaDir.exists())
-            mediaDir else filesDir
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        cameraExecutor.shutdown()
+        }, ContextCompat.getMainExecutor(requireContext()))
     }
 
     private fun requestPermission() {
-
-        if (CameraUtility.hasCameraPermissions(this)) {
+        if (CameraUtility.hasCameraPermissions(requireContext())) {
             startCamera()
             return
         }
@@ -158,12 +174,9 @@ class CameraFragment : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
                 "You need to accept the camera permission to use this app",
                 REQUEST_CODE_CAMERA_PERMISSION,
                 Manifest.permission.CAMERA
-
             )
         }
-
     }
-
 
     override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) {
         startCamera()
@@ -186,6 +199,10 @@ class CameraFragment : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this)
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 
     private class LuminosityAnalyzer(private val listener: LumaListener) : ImageAnalysis.Analyzer {
 
@@ -208,6 +225,5 @@ class CameraFragment : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
             image.close()
         }
     }
-
 
 }
