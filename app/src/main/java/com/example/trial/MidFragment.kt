@@ -6,25 +6,20 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.fragment.findNavController
-import com.example.trial.databinding.FragmentSecondBinding
-import com.example.trial.databinding.FragmentCamBinding
+import com.example.trial.databinding.FragmentMidBinding
 import android.Manifest
 import android.content.Context
 import android.net.Uri
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.widget.Toast
 import androidx.camera.core.*
-import androidx.camera.core.R
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import com.example.trial.Constants.FILENAME_FORMAT
 import com.example.trial.Constants.REQUEST_CODE_CAMERA_PERMISSION
 import com.example.trial.Constants.TAG
-import com.example.trial.databinding.FragmentFirstBinding
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.fragment_cam.*
+import kotlinx.android.synthetic.main.fragment_mid.*
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 import java.io.File
@@ -39,12 +34,13 @@ typealias LumaListener = (luma: Double) -> Unit
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.
  */
-class CamFragment : Fragment(), EasyPermissions.PermissionCallbacks {
+class MidFragment : Fragment(), EasyPermissions.PermissionCallbacks {
 
-    private var _binding: FragmentCamBinding? = null
+    private var _binding: FragmentMidBinding? = null
     private var imageCapture: ImageCapture? = null
     private lateinit var outputDirectory: File
     private lateinit var cameraExecutor: ExecutorService
+
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
@@ -55,7 +51,7 @@ class CamFragment : Fragment(), EasyPermissions.PermissionCallbacks {
         savedInstanceState: Bundle?
     ): View? {
         thisContext = container?.getContext()
-        _binding = FragmentCamBinding.inflate(inflater, container, false)
+        _binding = FragmentMidBinding.inflate(inflater, container, false)
         return binding.root
 
     }
@@ -69,10 +65,8 @@ class CamFragment : Fragment(), EasyPermissions.PermissionCallbacks {
     }
 
     private fun takePhoto() {
-        // Get a stable reference of the modifiable image capture use case
         val imageCapture = imageCapture ?: return
 
-        // Create time-stamped output file to hold the image
         val photoFile = File(
             outputDirectory,
             SimpleDateFormat(
@@ -80,12 +74,7 @@ class CamFragment : Fragment(), EasyPermissions.PermissionCallbacks {
             ).format(System.currentTimeMillis()) + ".jpg"
         )
 
-        // Create output options object which contains file + metadata
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
-
-        // Set up image capture listener, which is triggered after photo has
-        // been taken
-
 
         imageCapture.takePicture(
             outputOptions,
@@ -104,22 +93,12 @@ class CamFragment : Fragment(), EasyPermissions.PermissionCallbacks {
             })
     }
 
-    private fun getOutputDirectory(): File {
-        val mediaDir = activity?.externalMediaDirs?.firstOrNull()?.let {
-            File(it, "Trial").apply { mkdirs() }
-        }
-        return if (mediaDir != null && mediaDir.exists())
-            mediaDir else activity?.filesDir!!
-    }
-
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
 
         cameraProviderFuture.addListener({
-            // Used to bind the lifecycle of cameras to the lifecycle owner
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
-            // Preview
             val preview = Preview.Builder()
                 .build()
                 .also {
@@ -137,7 +116,6 @@ class CamFragment : Fragment(), EasyPermissions.PermissionCallbacks {
                     })
                 }
 
-            // Select back camera as a default
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
             try {
@@ -153,7 +131,16 @@ class CamFragment : Fragment(), EasyPermissions.PermissionCallbacks {
                 Log.e(TAG, "Use case binding failed", exc)
             }
 
-        }, ContextCompat.getMainExecutor(requireContext()))
+
+        }, ContextCompat.getMainExecutor(requireActivity().baseContext))
+    }
+
+    private fun getOutputDirectory(): File {
+        val mediaDir = activity?.externalMediaDirs?.firstOrNull()?.let {
+            File(it, "Trial").apply { mkdirs() }
+        }
+        return if (mediaDir != null && mediaDir.exists())
+            mediaDir else activity?.filesDir!!
     }
 
     private fun requestPermission() {
@@ -178,6 +165,15 @@ class CamFragment : Fragment(), EasyPermissions.PermissionCallbacks {
         }
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this)
+    }
+
     override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) {
         startCamera()
     }
@@ -188,15 +184,6 @@ class CamFragment : Fragment(), EasyPermissions.PermissionCallbacks {
         } else {
             requestPermission()
         }
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this)
     }
 
     override fun onDestroyView() {
@@ -225,5 +212,4 @@ class CamFragment : Fragment(), EasyPermissions.PermissionCallbacks {
             image.close()
         }
     }
-
 }
