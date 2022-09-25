@@ -33,7 +33,7 @@ class FirstFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.buttonFirst.setOnClickListener {
-            findNavController().navigate(R.id.action_FirstFragment_to_CamFragment)
+            findNavController().navigate(R.id.action_FirstFragment_to_midFragment)
         }
     }
 
