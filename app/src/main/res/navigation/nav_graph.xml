@@ -28,5 +28,9 @@
         android:id="@+id/midFragment"
         android:name="com.example.trial.MidFragment"
         android:label="@string/cam_fragment_label"
-        tools:layout="@layout/fragment_mid" />
+        tools:layout="@layout/fragment_mid" >
+        <action
+            android:id="@+id/action_midFragment_to_SecondFragment"
+            app:destination="@id/SecondFragment" />
+    </fragment>
 </navigation>
