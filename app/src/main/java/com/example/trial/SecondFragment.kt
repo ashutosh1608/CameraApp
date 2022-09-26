@@ -1,18 +1,24 @@
 package com.example.trial
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
+import androidx.navigation.fragment.findNavController
+import com.android.volley.Response
+import com.android.volley.toolbox.Volley
 import com.example.trial.databinding.FragmentSecondBinding
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_second.*
+import java.io.ByteArrayOutputStream
 import java.io.File
 
 
@@ -27,12 +33,17 @@ class SecondFragment : Fragment() {
     // onDestroyView.
     private val binding get() = _binding!!
 
+    var thisContext: Context? = null
+
+    private var imageData: ByteArray? = null
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
 
         _binding = FragmentSecondBinding.inflate(inflater, container, false)
+        thisContext = container?.getContext()
         return binding.root
 
     }
@@ -56,6 +67,8 @@ class SecondFragment : Fragment() {
             matrix,
             true
         )
+        val stream = ByteArrayOutputStream()
+
 
         imageView.setImageBitmap(rotatedBitmap)
 
@@ -70,8 +83,48 @@ class SecondFragment : Fragment() {
         }
 
         binding.buttonUpload.setOnClickListener {
-            debug_text.text = category_spinner.selectedItem.toString()
+            rotatedBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            val image = stream.toByteArray()
+            val filename = imgPath?.split("/")?.get(imgPath?.split("/")!!.size-1)
+
+            sendImage(category_spinner.selectedItem.toString(), filename.toString(), image)
         }
+    }
+
+    fun sendImage(cat: String, filename: String, image: ByteArray){
+        imageData = image
+        val queue = Volley.newRequestQueue(thisContext)
+        val url = "http://192.168.0.51:5000/upload"
+        val request = object : VolleyFileUploadRequest(
+            Method.POST,
+            url,
+            Response.Listener {
+
+                Toast.makeText(thisContext, "Uploaded succesfully", Toast.LENGTH_SHORT).show()
+                Log.d("TRIAL_APP_REQUEST", it.toString())
+                findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
+
+            },
+            Response.ErrorListener {
+                Toast.makeText(thisContext, "Oops, something went wrong!", Toast.LENGTH_SHORT).show()
+
+                Log.d("TRIAL_APP_REQUEST", it.toString())
+            }
+        ) {
+            override fun getParams(): MutableMap<String, String>? {
+                val params = HashMap<String, String>()
+                params.put("category", cat)
+                return params
+            }
+            override fun getByteData(): MutableMap<String, FileDataPart> {
+                var params = HashMap<String, FileDataPart>()
+                params["file"] = FileDataPart(filename, imageData!!, "jpeg")
+
+                return params
+            }
+        }
+        queue.add(request)
+
     }
 
     override fun onDestroyView() {
