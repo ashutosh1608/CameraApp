@@ -89,6 +89,7 @@ class MidFragment : Fragment(), EasyPermissions.PermissionCallbacks {
                     val msg = "Photo capture succeeded: $savedUri"
                     Toast.makeText(thisContext, msg, Toast.LENGTH_SHORT).show()
                     Log.d(TAG, msg)
+                    findNavController().navigate(R.id.action_midFragment_to_SecondFragment)
                 }
             })
     }
