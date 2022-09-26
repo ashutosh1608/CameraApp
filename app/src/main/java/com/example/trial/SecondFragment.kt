@@ -1,6 +1,8 @@
 package com.example.trial
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -40,7 +42,22 @@ class SecondFragment : Fragment() {
 
         val imgPath = requireArguments().getString("CurrImage")
         val bitmap = BitmapFactory.decodeFile(File(imgPath).toString())
-        imageView.setImageBitmap(bitmap)
+
+        val matrix = Matrix()
+        matrix.postRotate(90F)
+//        val scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, true)
+
+        val rotatedBitmap = Bitmap.createBitmap(
+            bitmap,
+            0,
+            0,
+            bitmap.width,
+            bitmap.height,
+            matrix,
+            true
+        )
+
+        imageView.setImageBitmap(rotatedBitmap)
 
         val categories = resources.getStringArray(R.array.Categories)
         val adapter = ArrayAdapter<String>(requireActivity(),
