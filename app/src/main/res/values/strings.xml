@@ -6,7 +6,8 @@
     <string name="cam_fragment_label">Camera Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>
     <string name="next">Capture Image</string>
-    <string name="previous">Previous</string>
+    <string name="upload">Upload</string>
+    <string name="discard">Discard</string>
     <string name="take_photo">Take Photo</string>
     <string name="hello_first_fragment">Do you want to capture an image?</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
@@ -15,4 +16,12 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="save_name">Trial</string>
+    <string-array name="Categories">
+        <item>Cat1</item>
+        <item>Cat2</item>
+        <item>Cat3</item>
+        <item>Cat4</item>
+        <item>Cat5</item>
+        <item>Cat6</item>
+    </string-array>
 </resources>
